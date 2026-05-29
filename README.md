@@ -108,7 +108,7 @@ Example client configuration:
 
 Cursor uses newline-delimited JSON for stdio MCP servers. The server also
 accepts `Content-Length` framed messages for compatibility with other clients
-and diagnostic scripts. After changing server code, run `make build` before
+that use header-framed stdio. After changing server code, run `make build` before
 reloading the MCP server in Cursor so the configured binary is up to date.
 
 ## Tools

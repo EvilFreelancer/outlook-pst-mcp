@@ -2,6 +2,7 @@ package app
 
 import (
 	"fmt"
+	"io"
 	"os"
 	"path/filepath"
 	"strconv"
@@ -45,14 +46,14 @@ func (s *Service) ImportMailbox(pstPath string) (int, int, int, error) {
 			}
 		}
 
-		id := allocateImportID(messageAt, usedIDs)
-		dest := filepath.Join(filepath.Dir(extracted.Path), id+".eml")
-		if extracted.Path != dest {
-			_ = os.Remove(dest)
-			if err := os.Rename(extracted.Path, dest); err != nil {
-				skipped++
-				continue
-			}
+		id, err := s.allocateImportID(messageAt, usedIDs)
+		if err != nil {
+			return 0, 0, skipped, err
+		}
+		dest := filepath.Join(s.workspace, "messages", id+".eml")
+		if err := copyFile(extracted.Path, dest); err != nil {
+			skipped++
+			continue
 		}
 
 		subject := meta.Subject
@@ -80,15 +81,44 @@ func (s *Service) ImportMailbox(pstPath string) (int, int, int, error) {
 	return len(folders), len(batch), skipped, nil
 }
 
-func allocateImportID(messageAt int64, used map[string]struct{}) string {
+func (s *Service) allocateImportID(messageAt int64, used map[string]struct{}) (string, error) {
 	for suffix := 0; ; suffix++ {
 		id := strconv.FormatInt(messageAt, 10)
 		if suffix > 0 {
 			id = fmt.Sprintf("%d_%d", messageAt, suffix)
 		}
-		if _, exists := used[id]; !exists {
-			used[id] = struct{}{}
-			return id
+		if _, exists := used[id]; exists {
+			continue
 		}
+		if _, found, err := s.store.GetMessage(id); err != nil {
+			return "", err
+		} else if found {
+			continue
+		}
+		if _, err := os.Stat(filepath.Join(s.workspace, "messages", id+".eml")); err == nil {
+			continue
+		} else if !os.IsNotExist(err) {
+			return "", err
+		}
+		used[id] = struct{}{}
+		return id, nil
 	}
+}
+
+func copyFile(src, dst string) error {
+	if err := os.MkdirAll(filepath.Dir(dst), 0o755); err != nil {
+		return err
+	}
+	in, err := os.Open(src)
+	if err != nil {
+		return err
+	}
+	defer in.Close()
+	out, err := os.Create(dst)
+	if err != nil {
+		return err
+	}
+	defer out.Close()
+	_, err = io.Copy(out, in)
+	return err
 }

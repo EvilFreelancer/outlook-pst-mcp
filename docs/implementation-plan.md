@@ -7,7 +7,7 @@ Build a Go MCP server that imports Outlook PST mail through `readpst`, supports 
 ## Implemented Structure
 
 - `go.mod`: Go module definition.
-- `cmd/outlook-pst-mcp/main.go`: CLI entrypoint and stdio MCP server startup.
+- `cmd/outlook-pst-mcp/main.go`: CLI entrypoint, PST import subcommand, and stdio MCP server startup.
 - `internal/mail/message.go`: EML parse, build, and patch functions.
 - `internal/store/store.go`: SQLite schema, repository methods, and transactions.
 - `internal/pst/importer.go`: `readpst` lookup, command execution, extracted EML discovery.
@@ -22,6 +22,7 @@ Build a Go MCP server that imports Outlook PST mail through `readpst`, supports 
 - EML handling tests and implementation.
 - SQLite store tests and implementation.
 - PST importer tests with fake `readpst` and implementation.
+- Import workflow that copies extracted messages into the canonical message store.
 - Application service workflow tests and implementation.
 - Exporter tests and implementation.
 - MCP server tests for tool listing, tool calls, and stdio framing.

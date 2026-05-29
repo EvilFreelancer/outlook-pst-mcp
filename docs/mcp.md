@@ -8,8 +8,8 @@ response framing matches the framing used by the first request on the
 connection.
 
 Cursor's bundled MCP stdio transport sends newline-delimited JSON. The
-`Content-Length` mode is kept for compatibility with MCP clients and local
-diagnostic scripts that use header-framed stdio messages.
+`Content-Length` mode is kept for compatibility with MCP clients that use
+header-framed stdio messages.
 
 The server supports:
 

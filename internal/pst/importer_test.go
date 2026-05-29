@@ -48,6 +48,6 @@ func TestImporterValidatesReadpstAndPSTPath(t *testing.T) {
 
 	_, err := pst.Import(pst.Options{PSTPath: filepath.Join(tmp, "missing.pst"), OutputDir: filepath.Join(tmp, "out")})
 	if err == nil {
-		t.Fatal("expected missing readpst or PST validation error")
+		t.Fatal("expected missing readpst or PST path error")
 	}
 }

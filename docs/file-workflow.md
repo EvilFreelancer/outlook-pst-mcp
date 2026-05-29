@@ -16,7 +16,7 @@ workspace/
 
 ## PST Input
 
-The PST path is provided to `import_mailbox`. The server validates that the path exists and is a regular file before running `readpst`.
+The PST path is provided to the `outlook-pst-mcp import` CLI subcommand. The importer validates that the path exists and is a regular file before running `readpst`.
 
 The source PST is treated as immutable input. The server must not write, truncate, replace, or delete it.
 
@@ -24,7 +24,7 @@ The source PST is treated as immutable input. The server must not write, truncat
 
 The `internal/pst` package locates `readpst` on `PATH` and runs it with `-e`, `-b`, and `-o` so each message is written as a separate `.eml` file under the workspace extraction directory. The `-b` flag skips RTF body attachments that can crash some `readpst` builds on certain PST items. Extraction output is raw import material.
 
-The importer walks the extraction directory and discovers `.eml` files. Each file is renamed to `<unix_timestamp>.eml` using the message `Date` header (or file modification time as a fallback) so folder listings sort chronologically. Indexing reads headers only and stores the renamed path in SQLite without copying message bodies into `workspace/messages/`.
+The importer walks the extraction directory and discovers `.eml` files. Each file is read for header metadata, assigned a stable message ID from the message `Date` header (or file modification time as a fallback), and copied into the canonical message store. SQLite stores the canonical path, not the raw extraction path.
 
 ## Canonical EML Store
 
@@ -54,4 +54,3 @@ SQLite metadata lets the server list, filter, move, and soft-delete messages wit
 `export_eml` creates an output folder tree that mirrors indexed folders. By default, soft-deleted messages are skipped. Exported filenames use internal message IDs to avoid collisions.
 
 `manifest.json` records export timestamp, folder count, exported message count, and skipped deleted count.
-
