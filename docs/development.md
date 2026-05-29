@@ -52,6 +52,26 @@ Use `-workspace <dir>` only when the mailbox state should live outside the proje
 
 Builds use `-buildvcs=false` because some local workspaces may contain a read-only or synthetic `.git` directory that prevents Go VCS stamping.
 
+## Release Binaries
+
+GitHub Actions publishes prebuilt release binaries to GitHub Releases when a
+SemVer tag in `X.Y.Z` format is pushed, or when the release workflow is started
+manually with a SemVer tag.
+
+Release assets are named:
+
+```text
+outlook-pst-mcp_<version>_<os>_<arch>.tar.gz
+outlook-pst-mcp_<version>_<os>_<arch>.zip
+SHA256SUMS
+```
+
+Linux assets use `.tar.gz`. Windows assets use `.zip`. The checksum file
+contains SHA-256 hashes for all uploaded archives.
+
+The project uses `github.com/mattn/go-sqlite3`, so release builds keep CGO
+enabled and install the required C cross-compilers.
+
 ## Install
 
 `make install` with no parameters builds the binary and installs it to:
@@ -66,3 +86,8 @@ Internally the install path is `$(DESTDIR)$(BINDIR)/outlook-pst-mcp`. The defaul
 make install PREFIX=/usr/local
 make install BINDIR=/custom/bin
 ```
+
+To install a prebuilt release locally, download the archive for the current
+operating system and CPU architecture from the GitHub Release, verify it against
+`SHA256SUMS`, unpack it, and place the `outlook-pst-mcp` binary in a directory
+on `PATH`, such as `~/.local/bin`.

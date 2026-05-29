@@ -74,6 +74,29 @@ Install to an exact binary directory:
 make install BINDIR=/custom/bin
 ```
 
+## Install a Release Binary
+
+Prebuilt binaries are published in GitHub Releases when a SemVer tag such as
+`1.2.3` is released.
+
+Download the archive for your operating system and architecture:
+
+```text
+outlook-pst-mcp_<version>_<os>_<arch>.tar.gz
+outlook-pst-mcp_<version>_<os>_<arch>.zip
+```
+
+Verify the archive with the matching `SHA256SUMS` file, unpack it, and place the
+binary somewhere on `PATH`.
+
+Example for Linux:
+
+```bash
+mkdir -p ~/.local/bin
+tar -xzf outlook-pst-mcp_<version>_linux_amd64.tar.gz
+install -m 0755 outlook-pst-mcp ~/.local/bin/outlook-pst-mcp
+```
+
 ## Run
 
 Run the MCP server over stdio:
