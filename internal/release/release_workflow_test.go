@@ -86,14 +86,59 @@ func TestReadmeDocumentsReleaseBinaryInstall(t *testing.T) {
 
 	requiredSnippets := []string{
 		"GitHub Releases",
+		"https://github.com/EvilFreelancer/outlook-pst-mcp/releases/tag/0.1.1",
+		"curl -fsSL https://raw.githubusercontent.com/EvilFreelancer/outlook-pst-mcp/main/install.sh | bash",
+		`irm https://raw.githubusercontent.com/EvilFreelancer/outlook-pst-mcp/main/install.ps1 | iex`,
+		"./install.sh --version 0.1.1",
 		"outlook-pst-mcp_<version>_<os>_<arch>",
-		"SHA256SUMS",
 		"~/.local/bin/outlook-pst-mcp",
+		`"args": ["-workspace",`,
+		"import_pst",
 	}
 
 	for _, snippet := range requiredSnippets {
 		if !strings.Contains(readme, snippet) {
 			t.Fatalf("README release install documentation is missing %q", snippet)
+		}
+	}
+}
+
+func TestInstallScriptsDownloadReleaseAssets(t *testing.T) {
+	root := filepath.Join("..", "..")
+	shell := readFile(t, filepath.Join(root, "install.sh"))
+	powershell := readFile(t, filepath.Join(root, "install.ps1"))
+
+	shellSnippets := []string{
+		"OUTLOOK_PST_MCP_REPO",
+		"EvilFreelancer/outlook-pst-mcp",
+		"--version X.Y.Z",
+		"--install-dir D",
+		"--workspace D",
+		"releases/latest",
+		"outlook-pst-mcp_${TAG}_${GOOS}_${GOARCH}.tar.gz",
+		"SHA256SUMS",
+		"sha256sum -c",
+		"outlook-pst-mcp --help",
+	}
+	for _, snippet := range shellSnippets {
+		if !strings.Contains(shell, snippet) {
+			t.Fatalf("install.sh is missing %q", snippet)
+		}
+	}
+
+	powershellSnippets := []string{
+		"OUTLOOK_PST_MCP_REPO",
+		"EvilFreelancer/outlook-pst-mcp",
+		"outlook-pst-mcp_${tag}_windows_${arch}.zip",
+		"Invoke-RestMethod",
+		"Invoke-WebRequest",
+		"Expand-Archive",
+		"outlook-pst-mcp.exe",
+		"mcpServers",
+	}
+	for _, snippet := range powershellSnippets {
+		if !strings.Contains(powershell, snippet) {
+			t.Fatalf("install.ps1 is missing %q", snippet)
 		}
 	}
 }
