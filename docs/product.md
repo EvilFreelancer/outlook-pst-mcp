@@ -26,8 +26,8 @@ The server reads the PST through `readpst`, indexes extracted mail, applies CRUD
 
 ## User Workflow
 
-1. Import a PST into a workspace with the `outlook-pst-mcp import` CLI subcommand.
-2. Start the MCP server with the same workspace directory.
+1. Start the MCP server (workspace defaults to `<cwd>/.outlook-pst-mcp_data`).
+2. Import a PST with the `import_pst` MCP tool, or with the `outlook-pst-mcp import` CLI subcommand.
 3. Browse folders and message summaries through MCP tools.
 4. Read full message content when needed.
 5. Create, update, delete, or move messages in the editable workspace.

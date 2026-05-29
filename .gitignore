@@ -1,6 +1,7 @@
 /outlook-pst-mcp
 .cursor/
 bin/
+.outlook-pst-mcp_data/
 workspace/
 *.db
 *.db-*

@@ -1,8 +1,7 @@
 {
   "mcpServers": {
     "outlook-pst-local": {
-      "command": "/home/pasha/Repository/rgs/email-parsing/bin/outlook-pst-mcp",
-      "args": ["-workspace", "/home/pasha/Repository/rgs/email-parsing/workspace"]
+      "command": "outlook-pst-mcp"
     }
   }
 }

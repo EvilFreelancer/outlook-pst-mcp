@@ -63,6 +63,7 @@ func (s *Server) requireService() (*app.Service, error) {
 
 func (s *Server) ToolNames() []string {
 	return []string{
+		"import_pst",
 		"list_folders",
 		"list_messages",
 		"get_message",
@@ -76,11 +77,14 @@ func (s *Server) ToolNames() []string {
 
 func (s *Server) CallTool(ctx context.Context, name string, args json.RawMessage) (ToolResult, error) {
 	_ = ctx
+	if !knownTool(name, s.ToolNames()) {
+		return ToolResult{}, fmt.Errorf("unknown tool %q", name)
+	}
+	if name == "import_pst" {
+		return s.callImportPST(args)
+	}
 	svc, err := s.requireService()
 	if err != nil {
-		if !knownTool(name, s.ToolNames()) {
-			return ToolResult{}, fmt.Errorf("unknown tool %q", name)
-		}
 		return ToolResult{}, err
 	}
 	switch name {
@@ -198,11 +202,35 @@ func (s *Server) CallTool(ctx context.Context, name string, args json.RawMessage
 		}
 		return ToolResult{Content: map[string]string{"status": "ok"}}, svc.ExportEML(req.OutputDir, req.IncludeDeleted)
 	default:
-		if knownTool(name, s.ToolNames()) {
-			return ToolResult{}, fmt.Errorf("tool %q is not implemented in this handler yet", name)
-		}
-		return ToolResult{}, fmt.Errorf("unknown tool %q", name)
+		return ToolResult{}, fmt.Errorf("tool %q is not implemented in this handler yet", name)
 	}
+}
+
+func (s *Server) callImportPST(args json.RawMessage) (ToolResult, error) {
+	var req struct {
+		PSTPath string `json:"pst_path"`
+	}
+	if err := json.Unmarshal(args, &req); err != nil {
+		return ToolResult{}, err
+	}
+	pstPath := strings.TrimSpace(req.PSTPath)
+	if pstPath == "" {
+		return ToolResult{}, fmt.Errorf("pst_path is required")
+	}
+	svc, err := s.requireService()
+	if err != nil {
+		return ToolResult{}, err
+	}
+	folders, messages, skipped, err := svc.ImportMailbox(pstPath)
+	if err != nil {
+		return ToolResult{}, err
+	}
+	return ToolResult{Content: map[string]any{
+		"workspace":     s.workspace,
+		"folder_count":  folders,
+		"message_count": messages,
+		"skipped_count": skipped,
+	}}, nil
 }
 
 func toHeader(values map[string]string) mail.Header {
@@ -418,6 +446,8 @@ func mustJSON(value any) string {
 
 func toolTitle(name string) string {
 	switch name {
+	case "import_pst":
+		return "Import PST"
 	case "list_folders":
 		return "List Folders"
 	case "list_messages":
@@ -441,6 +471,8 @@ func toolTitle(name string) string {
 
 func toolDescription(name string) string {
 	switch name {
+	case "import_pst":
+		return "Import messages from a PST file into the workspace using readpst."
 	case "list_folders":
 		return "List indexed mailbox folders."
 	case "list_messages":
@@ -471,6 +503,10 @@ func toolInputSchema(name string) map[string]any {
 	props := schema["properties"].(map[string]any)
 
 	switch name {
+	case "import_pst":
+		props["pst_path"] = stringProperty("Path to the .pst file to import.")
+		schema["required"] = []string{"pst_path"}
+		return schema
 	case "list_folders":
 		schema["required"] = []string{}
 		return schema

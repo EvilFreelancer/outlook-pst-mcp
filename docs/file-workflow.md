@@ -2,8 +2,10 @@
 
 ## Workspace Layout
 
+When `-workspace` is omitted, the server uses `<cwd>/.outlook-pst-mcp_data` (typically the project root when started from Cursor or `make run`).
+
 ```text
-workspace/
+.outlook-pst-mcp_data/
   mailbox.db
   extracted/
     <readpst output>

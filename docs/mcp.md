@@ -22,11 +22,30 @@ Unknown JSON-RPC methods return a method-not-found error. Tool failures are retu
 
 Tool `inputSchema` values follow MCP 2025-06-18 conventions: plain JSON Schema objects with `type: "object"`, property descriptions, and no `$schema` meta field. Stdout responses are flushed after each framed message so Cursor can complete the initialize handshake promptly.
 
-The MCP serve command opens `mailbox.db` lazily on the first `tools/call`, not before `initialize`, so the stdio handshake is not blocked by SQLite startup or locks from other processes.
+The MCP serve command opens `mailbox.db` lazily on the first `tools/call` that needs it, not before `initialize`, so the stdio handshake is not blocked by SQLite startup or locks from other processes. The `import_pst` tool may run on an empty workspace.
+
+## Workspace
+
+When `-workspace` is omitted, mailbox state is stored in `<cwd>/.outlook-pst-mcp_data`. Cursor and `make run` should use the repository root as the working directory so each project keeps its own cache. Pass `-workspace <dir>` to override the location.
 
 ## Tools
 
-Mailbox import is performed by the CLI subcommand `outlook-pst-mcp import` and is not exposed as an MCP tool. The MCP server operates on an existing workspace database.
+The server starts without mailbox data. Use `import_pst` to load a PST into the workspace, then use the CRUD and search tools. The CLI subcommand `outlook-pst-mcp import` remains available for scripts.
+
+### `import_pst`
+
+Imports messages from a PST file into the workspace using `readpst`. Creates the workspace directory and database on first use.
+
+Arguments:
+
+- `pst_path`: required absolute or relative path to the `.pst` file.
+
+Response:
+
+- `workspace`: workspace directory path.
+- `folder_count`: number of folders created or referenced during import.
+- `message_count`: number of messages indexed.
+- `skipped_count`: number of extracted messages that could not be copied or indexed.
 
 ### `list_folders`
 

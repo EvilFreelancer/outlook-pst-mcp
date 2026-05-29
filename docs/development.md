@@ -22,7 +22,7 @@ The `Makefile` is the primary local interface.
 - `make test`: run the full test suite.
 - `make build`: build `bin/outlook-pst-mcp`.
 - `make install`: install the binary into `$(BINDIR)`, defaulting to `$(HOME)/.local/bin`.
-- `make run`: run the server over stdio with `WORKSPACE`, defaulting to `./workspace`.
+- `make run`: run the server over stdio; optional `WORKSPACE=dir` overrides the default `<cwd>/.outlook-pst-mcp_data`.
 - `make clean`: remove build output.
 
 `GOCACHE` defaults to `/tmp/email-parsing-go-build` so tests and builds work in restricted environments where the default Go cache may not be writable.
@@ -43,8 +43,10 @@ Tests cover:
 Mailbox import is a CLI subcommand:
 
 ```bash
-./bin/outlook-pst-mcp import -workspace ./workspace -pst /absolute/path/to/backup.pst
+./bin/outlook-pst-mcp import -pst /absolute/path/to/backup.pst
 ```
+
+Use `-workspace <dir>` only when the mailbox state should live outside the project default.
 
 ## Build
 

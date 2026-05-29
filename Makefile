@@ -2,7 +2,7 @@ GO ?= go
 GOCACHE ?= /tmp/email-parsing-go-build
 PREFIX ?= $(HOME)/.local
 BINDIR ?= $(PREFIX)/bin
-WORKSPACE ?= ./workspace
+WORKSPACE ?=
 BIN_DIR := bin
 BIN := $(BIN_DIR)/outlook-pst-mcp
 CMD := ./cmd/outlook-pst-mcp
@@ -18,7 +18,7 @@ help:
 	  '  make test                        run all tests' \
 	  '  make build                       build bin/outlook-pst-mcp' \
 	  '  make install [PREFIX|BINDIR=...] install the binary' \
-	  '  make run WORKSPACE=./workspace   run the MCP server over stdio' \
+	  '  make run [WORKSPACE=dir]          run the MCP server over stdio' \
 	  '  make clean                       remove build output'
 
 build:
@@ -41,7 +41,11 @@ install: build
 	install -m 0755 $(BIN) $(DESTDIR)$(BINDIR)/outlook-pst-mcp
 
 run:
+ifeq ($(strip $(WORKSPACE)),)
+	GOCACHE=$(GOCACHE) $(GO) run $(GOFLAGS) $(CMD)
+else
 	GOCACHE=$(GOCACHE) $(GO) run $(GOFLAGS) $(CMD) -workspace $(WORKSPACE)
+endif
 
 clean:
 	rm -rf $(BIN_DIR)

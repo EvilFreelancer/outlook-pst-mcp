@@ -4,13 +4,16 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
+	"os"
 	"path/filepath"
+	"runtime"
 	"strconv"
 	"strings"
 	"testing"
 
 	"outlook-pst-mcp/internal/app"
 	"outlook-pst-mcp/internal/mcpserver"
+	"outlook-pst-mcp/internal/store"
 )
 
 func TestServerListsRequiredToolsAndRejectsUnknownTool(t *testing.T) {
@@ -18,6 +21,7 @@ func TestServerListsRequiredToolsAndRejectsUnknownTool(t *testing.T) {
 	tools := server.ToolNames()
 
 	required := []string{
+		"import_pst",
 		"list_folders",
 		"list_messages",
 		"get_message",
@@ -140,6 +144,55 @@ func TestServeHandlesLineDelimitedInitializeAndToolsList(t *testing.T) {
 	}
 	if !strings.Contains(lines[1], `"id":2`) || !strings.Contains(lines[1], `"list_folders"`) {
 		t.Fatalf("tools/list line missing: %s", lines[1])
+	}
+}
+
+func TestListFoldersOnEmptyLazyWorkspace(t *testing.T) {
+	server := mcpserver.NewLazy(t.TempDir())
+	result := callTool(t, server, "list_folders", map[string]any{})
+	folders, ok := result.Content.([]store.Folder)
+	if !ok {
+		t.Fatalf("list_folders content = %#v", result.Content)
+	}
+	if len(folders) != 0 {
+		t.Fatalf("folders = %#v, want empty", folders)
+	}
+}
+
+func TestImportPSTViaMCPTool(t *testing.T) {
+	if runtime.GOOS == "windows" {
+		t.Skip("shell fake readpst is only used on Unix-like systems")
+	}
+	workspace := t.TempDir()
+	bin := filepath.Join(workspace, "bin")
+	if err := os.Mkdir(bin, 0o755); err != nil {
+		t.Fatal(err)
+	}
+	script := filepath.Join(bin, "readpst")
+	body := "#!/bin/sh\nout=\"\"\nwhile [ $# -gt 0 ]; do case \"$1\" in -o) out=\"$2\"; shift 2;; *) shift;; esac; done\nmkdir -p \"$out/Inbox\"\nprintf 'Date: Mon, 02 Jan 2006 15:04:05 +0000\\r\\nSubject: Imported\\r\\nFrom: a@example.com\\r\\nTo: b@example.com\\r\\n\\r\\nBody\\r\\n' > \"$out/Inbox/1.eml\"\n"
+	if err := os.WriteFile(script, []byte(body), 0o755); err != nil {
+		t.Fatal(err)
+	}
+	t.Setenv("PATH", bin)
+
+	pstPath := filepath.Join(workspace, "backup.pst")
+	if err := os.WriteFile(pstPath, []byte("pst"), 0o644); err != nil {
+		t.Fatal(err)
+	}
+
+	server := mcpserver.NewLazy(workspace)
+	imported := callTool(t, server, "import_pst", map[string]any{"pst_path": pstPath})
+	stats, ok := imported.Content.(map[string]any)
+	if !ok {
+		t.Fatalf("import result = %#v", imported.Content)
+	}
+	if stats["message_count"] != 1 || stats["folder_count"] != 1 {
+		t.Fatalf("import stats = %#v", stats)
+	}
+
+	listed := callTool(t, server, "list_messages", map[string]any{"limit": 10})
+	if listed.Content.(map[string]any)["total"].(int) != 1 {
+		t.Fatalf("list result = %#v", listed.Content)
 	}
 }
 

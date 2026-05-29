@@ -9,6 +9,7 @@ import (
 
 	"outlook-pst-mcp/internal/app"
 	"outlook-pst-mcp/internal/mcpserver"
+	"outlook-pst-mcp/internal/workspace"
 )
 
 func main() {
@@ -21,10 +22,16 @@ func main() {
 
 func serveCmd(args []string) {
 	flags := flag.NewFlagSet("serve", flag.ExitOnError)
-	workspace := flags.String("workspace", ".", "workspace directory for mailbox state")
+	workspaceFlag := flags.String("workspace", "", "workspace directory (default: <cwd>/.outlook-pst-mcp_data)")
 	_ = flags.Parse(args)
 
-	server := mcpserver.NewLazy(*workspace)
+	workspaceDir, err := workspace.Resolve(*workspaceFlag)
+	if err != nil {
+		fmt.Fprintln(os.Stderr, err)
+		os.Exit(1)
+	}
+
+	server := mcpserver.NewLazy(workspaceDir)
 	defer func() {
 		if err := server.Close(); err != nil {
 			fmt.Fprintln(os.Stderr, err)
@@ -39,16 +46,22 @@ func serveCmd(args []string) {
 
 func importCmd(args []string) {
 	flags := flag.NewFlagSet("import", flag.ExitOnError)
-	workspace := flags.String("workspace", "", "workspace directory for mailbox state")
+	workspaceFlag := flags.String("workspace", "", "workspace directory (default: <cwd>/.outlook-pst-mcp_data)")
 	pstPath := flags.String("pst", "", "path to PST file")
 	_ = flags.Parse(args)
 
-	if *workspace == "" || *pstPath == "" {
-		fmt.Fprintln(os.Stderr, "usage: outlook-pst-mcp import -workspace <dir> -pst <file.pst>")
+	if *pstPath == "" {
+		fmt.Fprintln(os.Stderr, "usage: outlook-pst-mcp import -pst <file.pst> [-workspace <dir>]")
 		os.Exit(2)
 	}
 
-	service, err := app.Open(*workspace)
+	workspaceDir, err := workspace.Resolve(*workspaceFlag)
+	if err != nil {
+		fmt.Fprintln(os.Stderr, err)
+		os.Exit(1)
+	}
+
+	service, err := app.Open(workspaceDir)
 	if err != nil {
 		fmt.Fprintln(os.Stderr, err)
 		os.Exit(1)

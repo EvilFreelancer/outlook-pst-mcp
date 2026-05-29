@@ -70,13 +70,15 @@ make install BINDIR=/custom/bin
 Run the MCP server over stdio:
 
 ```bash
-make run WORKSPACE=./workspace
+make run
 ```
+
+Without `-workspace`, data is stored under `.outlook-pst-mcp_data` in the process current working directory (the project root when Cursor starts the MCP server from this repo).
 
 The workspace stores:
 
 ```text
-workspace/
+.outlook-pst-mcp_data/
   mailbox.db
   extracted/
   messages/
@@ -85,11 +87,13 @@ workspace/
 
 ## Import a PST
 
-Import is a CLI subcommand and writes into the workspace database:
+Use the `import_pst` MCP tool from a connected client, or the CLI subcommand:
 
 ```bash
-./bin/outlook-pst-mcp import -workspace ./workspace -pst /absolute/path/to/backup.pst
+./bin/outlook-pst-mcp import -pst /absolute/path/to/backup.pst
 ```
+
+Both write into the same workspace database (default `.outlook-pst-mcp_data`).
 
 ## MCP Client Configuration
 
@@ -99,12 +103,13 @@ Example client configuration:
 {
   "mcpServers": {
     "outlook-pst": {
-      "command": "/absolute/path/to/outlook-pst-mcp",
-      "args": ["-workspace", "/absolute/path/to/workspace"]
+      "command": "/absolute/path/to/outlook-pst-mcp"
     }
   }
 }
 ```
+
+Add `"args": ["-workspace", "/path/to/dir"]` only when the mailbox state should not use the project default `.outlook-pst-mcp_data`.
 
 Cursor uses newline-delimited JSON for stdio MCP servers. The server also
 accepts `Content-Length` framed messages for compatibility with other clients
@@ -112,6 +117,18 @@ that use header-framed stdio. After changing server code, run `make build` befor
 reloading the MCP server in Cursor so the configured binary is up to date.
 
 ## Tools
+
+### `import_pst`
+
+Imports a PST file into the workspace. Use this when the server has no mailbox data yet.
+
+```json
+{
+  "pst_path": "/absolute/path/to/backup.pst"
+}
+```
+
+Response fields: `workspace`, `folder_count`, `message_count`, `skipped_count`.
 
 ### `list_folders`
 
@@ -226,7 +243,7 @@ make check
 make test
 make build
 make install
-make run WORKSPACE=./workspace
+make run
 make clean
 ```
 
