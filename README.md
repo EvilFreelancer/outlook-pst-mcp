@@ -74,6 +74,29 @@ Install to an exact binary directory:
 make install BINDIR=/custom/bin
 ```
 
+## Install a Release Binary
+
+Prebuilt binaries are published in GitHub Releases when a SemVer tag such as
+`1.2.3` is released.
+
+Download the archive for your operating system and architecture:
+
+```text
+outlook-pst-mcp_<version>_<os>_<arch>.tar.gz
+outlook-pst-mcp_<version>_<os>_<arch>.zip
+```
+
+Verify the archive with the matching `SHA256SUMS` file, unpack it, and place the
+binary somewhere on `PATH`.
+
+Example for Linux:
+
+```bash
+mkdir -p ~/.local/bin
+tar -xzf outlook-pst-mcp_<version>_linux_amd64.tar.gz
+install -m 0755 outlook-pst-mcp ~/.local/bin/outlook-pst-mcp
+```
+
 ## Run
 
 Run the MCP server over stdio:
@@ -258,6 +281,21 @@ make clean
 
 `make check` runs `go vet ./...`.
 
+## Release Flow
+
+Pull requests run GitHub Actions verification with:
+
+```bash
+make check
+make test
+make build
+```
+
+After changes are merged to `main`, GitHub Actions bumps the latest patch SemVer
+tag, pushes the new tag, and calls the release binary workflow. The release
+workflow builds the archives, writes `SHA256SUMS`, and uploads everything to the
+matching GitHub Release.
+
 ## Documentation
 
 Project documentation lives in `docs/`:
@@ -275,4 +313,5 @@ Project documentation lives in `docs/`:
 - Documentation lives in `docs/`.
 - Tests are written before implementation code.
 - The source PST file is always treated as read-only input.
+- Source packages under `internal/` must not be hidden by local runtime ignore rules.
 - Use `make check`, `make test`, and `make build` before considering changes complete.

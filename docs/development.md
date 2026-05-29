@@ -52,6 +52,37 @@ Use `-workspace <dir>` only when the mailbox state should live outside the proje
 
 Builds use `-buildvcs=false` because some local workspaces may contain a read-only or synthetic `.git` directory that prevents Go VCS stamping.
 
+Source package directories under `internal/` must not be hidden by ignore rules.
+For example, `internal/workspace` is application source code, while `/workspace/`
+is a root-level local scratch directory.
+
+## Release Binaries
+
+GitHub Actions uses three workflows for CI and releases:
+
+- `Tests on PR`: runs project verification for pull requests.
+- `Tag release on merge`: bumps the latest patch SemVer tag after a merge to
+  `main`, unless the commit is already tagged.
+- `Release binaries`: builds and publishes release assets for the tag.
+
+The release binary workflow is callable from the tag workflow because tags
+pushed with `GITHUB_TOKEN` do not trigger a separate `push: tags` workflow run.
+It also supports direct SemVer tag pushes and manual dispatch.
+
+Release assets are named:
+
+```text
+outlook-pst-mcp_<version>_<os>_<arch>.tar.gz
+outlook-pst-mcp_<version>_<os>_<arch>.zip
+SHA256SUMS
+```
+
+Linux assets use `.tar.gz`. Windows assets use `.zip`. The checksum file
+contains SHA-256 hashes for all uploaded archives.
+
+The project uses `github.com/mattn/go-sqlite3`, so release builds keep CGO
+enabled and install the required C cross-compilers.
+
 ## Install
 
 `make install` with no parameters builds the binary and installs it to:
@@ -66,3 +97,8 @@ Internally the install path is `$(DESTDIR)$(BINDIR)/outlook-pst-mcp`. The defaul
 make install PREFIX=/usr/local
 make install BINDIR=/custom/bin
 ```
+
+To install a prebuilt release locally, download the archive for the current
+operating system and CPU architecture from the GitHub Release, verify it against
+`SHA256SUMS`, unpack it, and place the `outlook-pst-mcp` binary in a directory
+on `PATH`, such as `~/.local/bin`.
