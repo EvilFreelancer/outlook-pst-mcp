@@ -52,6 +52,10 @@ Use `-workspace <dir>` only when the mailbox state should live outside the proje
 
 Builds use `-buildvcs=false` because some local workspaces may contain a read-only or synthetic `.git` directory that prevents Go VCS stamping.
 
+Source package directories under `internal/` must not be hidden by ignore rules.
+For example, `internal/workspace` is application source code, while `/workspace/`
+is a root-level local scratch directory.
+
 ## Release Binaries
 
 GitHub Actions uses three workflows for CI and releases:

@@ -2,11 +2,11 @@
 .cursor/
 bin/
 .outlook-pst-mcp_data/
-workspace/
+/workspace/
 *.db
 *.db-*
 *.pst
-export/
-extracted/
-messages/
+/export/
+/extracted/
+/messages/
 tools/readpst-bundle/

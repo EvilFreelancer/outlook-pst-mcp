@@ -313,4 +313,5 @@ Project documentation lives in `docs/`:
 - Documentation lives in `docs/`.
 - Tests are written before implementation code.
 - The source PST file is always treated as read-only input.
+- Source packages under `internal/` must not be hidden by local runtime ignore rules.
 - Use `make check`, `make test`, and `make build` before considering changes complete.

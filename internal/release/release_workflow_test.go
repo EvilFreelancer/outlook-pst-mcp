@@ -2,6 +2,7 @@ package release_test
 
 import (
 	"os"
+	"os/exec"
 	"path/filepath"
 	"strings"
 	"testing"
@@ -94,6 +95,19 @@ func TestReadmeDocumentsReleaseBinaryInstall(t *testing.T) {
 		if !strings.Contains(readme, snippet) {
 			t.Fatalf("README release install documentation is missing %q", snippet)
 		}
+	}
+}
+
+func TestGitignoreDoesNotHideInternalWorkspacePackage(t *testing.T) {
+	root := filepath.Join("..", "..")
+	path := filepath.Join("internal", "workspace", "path.go")
+	cmd := exec.Command("git", "check-ignore", "-q", path)
+	cmd.Dir = root
+
+	if err := cmd.Run(); err == nil {
+		t.Fatalf("%s is ignored by git, but it is source code required by cmd/outlook-pst-mcp", path)
+	} else if exitErr, ok := err.(*exec.ExitError); !ok || exitErr.ExitCode() != 1 {
+		t.Fatalf("git check-ignore %s failed unexpectedly: %v", path, err)
 	}
 }
 
