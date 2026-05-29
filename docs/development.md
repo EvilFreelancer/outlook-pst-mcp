@@ -102,3 +102,17 @@ To install a prebuilt release locally, download the archive for the current
 operating system and CPU architecture from the GitHub Release, verify it against
 `SHA256SUMS`, unpack it, and place the `outlook-pst-mcp` binary in a directory
 on `PATH`, such as `~/.local/bin`.
+
+The root install scripts follow the same release-install pattern as Coddy:
+
+- `install.sh`: Linux amd64 and Linux arm64.
+- `install.ps1`: Windows amd64.
+- `--version X.Y.Z`: install a specific release instead of the latest release.
+- `--install-dir DIR`: install into a custom binary directory.
+- `--workspace DIR`: print MCP configuration using a stable custom workspace.
+
+Example:
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/EvilFreelancer/outlook-pst-mcp/main/install.sh | bash
+```

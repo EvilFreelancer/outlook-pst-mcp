@@ -28,6 +28,35 @@ The MCP serve command opens `mailbox.db` lazily on the first `tools/call` that n
 
 When `-workspace` is omitted, mailbox state is stored in `<cwd>/.outlook-pst-mcp_data`. Cursor and `make run` should use the repository root as the working directory so each project keeps its own cache. Pass `-workspace <dir>` to override the location.
 
+## Client Setup
+
+After installing the release binary into `~/.local/bin/outlook-pst-mcp`, add it
+to an MCP client as a stdio server. A stable workspace path is recommended so
+the imported mailbox database is reused across client restarts.
+
+The install scripts print a ready-to-copy MCP configuration after placing the
+binary:
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/EvilFreelancer/outlook-pst-mcp/main/install.sh | bash
+```
+
+Example configuration:
+
+```json
+{
+  "mcpServers": {
+    "outlook-pst": {
+      "command": "/home/USER/.local/bin/outlook-pst-mcp",
+      "args": ["-workspace", "/home/USER/.local/share/outlook-pst-mcp"]
+    }
+  }
+}
+```
+
+Replace `USER` with the local account name, or use any absolute path supported
+by the MCP client.
+
 ## Tools
 
 The server starts without mailbox data. Use `import_pst` to load a PST into the workspace, then use the CRUD and search tools. The CLI subcommand `outlook-pst-mcp import` remains available for scripts.

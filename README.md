@@ -79,22 +79,39 @@ make install BINDIR=/custom/bin
 Prebuilt binaries are published in GitHub Releases when a SemVer tag such as
 `1.2.3` is released.
 
-Download the archive for your operating system and architecture:
+Linux:
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/EvilFreelancer/outlook-pst-mcp/main/install.sh | bash
+```
+
+Windows PowerShell:
+
+```powershell
+irm https://raw.githubusercontent.com/EvilFreelancer/outlook-pst-mcp/main/install.ps1 | iex
+```
+
+Install a specific release:
+
+```bash
+./install.sh --version 0.1.1
+```
+
+The scripts download the latest release from GitHub Releases, install the binary
+to `~/.local/bin/outlook-pst-mcp` on Linux or `%LOCALAPPDATA%\Programs\outlook-pst-mcp\outlook-pst-mcp.exe`
+on Windows, and print an MCP client configuration with a stable workspace path.
+
+Release assets use these names:
 
 ```text
 outlook-pst-mcp_<version>_<os>_<arch>.tar.gz
 outlook-pst-mcp_<version>_<os>_<arch>.zip
 ```
 
-Verify the archive with the matching `SHA256SUMS` file, unpack it, and place the
-binary somewhere on `PATH`.
-
-Example for Linux:
+Install `readpst` before importing real PST files. On Debian or Ubuntu:
 
 ```bash
-mkdir -p ~/.local/bin
-tar -xzf outlook-pst-mcp_<version>_linux_amd64.tar.gz
-install -m 0755 outlook-pst-mcp ~/.local/bin/outlook-pst-mcp
+sudo apt install pst-utils
 ```
 
 ## Run
@@ -135,13 +152,28 @@ Example client configuration:
 {
   "mcpServers": {
     "outlook-pst": {
-      "command": "/absolute/path/to/outlook-pst-mcp"
+      "command": "/home/USER/.local/bin/outlook-pst-mcp",
+      "args": ["-workspace", "/home/USER/.local/share/outlook-pst-mcp"]
     }
   }
 }
 ```
 
-Add `"args": ["-workspace", "/path/to/dir"]` only when the mailbox state should not use the project default `.outlook-pst-mcp_data`.
+Replace `USER` with the local account name, or use any other absolute binary and
+workspace paths accepted by the MCP client. The workspace stores the SQLite
+database, extracted EML files, edited messages, and exports.
+
+After adding the server to the MCP client, import a PST with the `import_pst`
+tool:
+
+```json
+{
+  "pst_path": "/absolute/path/to/backup.pst"
+}
+```
+
+The source PST is treated as read-only input. After import, use `list_folders`,
+`list_messages`, `get_message`, and the other MCP tools below.
 
 Cursor uses newline-delimited JSON for stdio MCP servers. The server also
 accepts `Content-Length` framed messages for compatibility with other clients
