@@ -80,6 +80,10 @@ if ($userPath -notlike "*$InstallDir*") {
     Write-Info "added $InstallDir to user PATH (open a new terminal if needed)"
 }
 
+if (-not (Get-Command readpst -ErrorAction SilentlyContinue)) {
+    Write-Info "readpst.exe not found; add a Windows build of readpst.exe to PATH before importing PST files, or use WSL with pst-utils"
+}
+
 Write-Info "done"
 & $dest --help
 

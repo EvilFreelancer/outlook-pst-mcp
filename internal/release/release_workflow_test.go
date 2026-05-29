@@ -134,6 +134,8 @@ func TestInstallScriptsDownloadReleaseAssets(t *testing.T) {
 		"Invoke-WebRequest",
 		"Expand-Archive",
 		"outlook-pst-mcp.exe",
+		"Get-Command readpst",
+		"readpst.exe",
 		"mcpServers",
 	}
 	for _, snippet := range powershellSnippets {
