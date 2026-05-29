@@ -20,6 +20,9 @@ fmt:
 
 vet:
 	GOCACHE=$(GOCACHE) $(GO) vet ./...
+
+check: vet
+
 test:
 	GOCACHE=$(GOCACHE) $(GO) test ./...
 

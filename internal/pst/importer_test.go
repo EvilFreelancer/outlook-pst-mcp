@@ -16,7 +16,7 @@ func TestImporterUsesReadpstAndDiscoversExtractedEML(t *testing.T) {
 		t.Fatal(err)
 	}
 	script := filepath.Join(bin, "readpst")
-	body := "#!/bin/sh\nmkdir -p \"$2/Inbox\"\nprintf 'Subject: Imported\\r\\n\\r\\nBody\\r\\n' > \"$2/Inbox/message.eml\"\n"
+	body := "#!/bin/sh\nout=\"\"\nwhile [ $# -gt 0 ]; do case \"$1\" in -o) out=\"$2\"; shift 2;; *) shift;; esac; done\nmkdir -p \"$out/Inbox\"\nprintf 'Date: Mon, 02 Jan 2006 15:04:05 +0000\\r\\nSubject: Imported\\r\\n\\r\\nBody\\r\\n' > \"$out/Inbox/1.eml\"\n"
 	if runtime.GOOS == "windows" {
 		t.Skip("shell fake readpst is only used on Unix-like systems")
 	}

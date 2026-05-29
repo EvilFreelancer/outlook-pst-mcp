@@ -8,6 +8,8 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"strconv"
+	"strings"
 	"time"
 
 	_ "github.com/mattn/go-sqlite3"
@@ -25,14 +27,15 @@ type Folder struct {
 }
 
 type Message struct {
-	ID       string
-	FolderID string
-	Subject  string
-	FromAddr string
-	ToAddrs  []string
-	CcAddrs  []string
-	EMLPath  string
-	Deleted  bool
+	ID        string
+	FolderID  string
+	Subject   string
+	FromAddr  string
+	ToAddrs   []string
+	CcAddrs   []string
+	EMLPath   string
+	Deleted   bool
+	MessageAt int64
 }
 
 type MessagePatch struct {
@@ -61,7 +64,7 @@ type Change struct {
 }
 
 func Open(path string) (*Store, error) {
-	db, err := sql.Open("sqlite3", path)
+	db, err := sql.Open("sqlite3", sqliteDSN(path))
 	if err != nil {
 		return nil, err
 	}
@@ -71,6 +74,14 @@ func Open(path string) (*Store, error) {
 		return nil, err
 	}
 	return st, nil
+}
+
+func sqliteDSN(path string) string {
+	const params = "_busy_timeout=5000&_journal_mode=WAL"
+	if strings.Contains(path, "?") {
+		return path + "&" + params
+	}
+	return path + "?" + params
 }
 
 func (s *Store) Close() error {
@@ -116,7 +127,16 @@ func (s *Store) ListFolders() ([]Folder, error) {
 }
 
 func (s *Store) CreateMessage(message Message) (Message, error) {
-	message.ID = newID("msg")
+	if message.MessageAt == 0 {
+		message.MessageAt = time.Now().Unix()
+	}
+	if message.ID == "" {
+		id, err := s.allocateMessageID(message.MessageAt)
+		if err != nil {
+			return Message{}, err
+		}
+		message.ID = id
+	}
 	if err := s.withTx(func(tx *sql.Tx) error {
 		if err := insertMessage(tx, message); err != nil {
 			return err
@@ -128,8 +148,22 @@ func (s *Store) CreateMessage(message Message) (Message, error) {
 	return message, nil
 }
 
+func (s *Store) InsertMessages(messages []Message) error {
+	if len(messages) == 0 {
+		return nil
+	}
+	return s.withTx(func(tx *sql.Tx) error {
+		for _, message := range messages {
+			if err := insertMessage(tx, message); err != nil {
+				return err
+			}
+		}
+		return nil
+	})
+}
+
 func (s *Store) GetMessage(id string) (Message, bool, error) {
-	row := s.db.QueryRow(`select id,folder_id,subject,from_addr,to_addrs,cc_addrs,eml_path,deleted from messages where id=?`, id)
+	row := s.db.QueryRow(`select id,folder_id,subject,from_addr,to_addrs,cc_addrs,eml_path,deleted,message_at from messages where id=?`, id)
 	message, err := scanMessage(row)
 	if errors.Is(err, sql.ErrNoRows) {
 		return Message{}, false, nil
@@ -228,7 +262,7 @@ func (s *Store) ListMessages(filter MessageFilter) ([]Message, int, error) {
 		return nil, 0, err
 	}
 	args = append(args, limit, filter.Offset)
-	rows, err := s.db.Query(`select id,folder_id,subject,from_addr,to_addrs,cc_addrs,eml_path,deleted from messages `+where+` order by updated_at desc limit ? offset ?`, args...)
+	rows, err := s.db.Query(`select id,folder_id,subject,from_addr,to_addrs,cc_addrs,eml_path,deleted,message_at from messages `+where+` order by message_at asc, id asc limit ? offset ?`, args...)
 	if err != nil {
 		return nil, 0, err
 	}
@@ -281,6 +315,7 @@ create table if not exists messages(
   cc_addrs text not null,
   eml_path text not null,
   deleted integer not null default 0,
+  message_at integer not null default 0,
   created_at text not null,
   updated_at text not null
 );
@@ -316,8 +351,8 @@ func insertMessage(tx *sql.Tx, message Message) error {
 		return err
 	}
 	now := time.Now().UTC().Format(time.RFC3339Nano)
-	_, err = tx.Exec(`insert into messages(id,folder_id,subject,from_addr,to_addrs,cc_addrs,eml_path,deleted,created_at,updated_at) values(?,?,?,?,?,?,?,?,?,?)`,
-		message.ID, message.FolderID, message.Subject, message.FromAddr, string(toJSON), string(ccJSON), message.EMLPath, boolInt(message.Deleted), now, now)
+	_, err = tx.Exec(`insert into messages(id,folder_id,subject,from_addr,to_addrs,cc_addrs,eml_path,deleted,message_at,created_at,updated_at) values(?,?,?,?,?,?,?,?,?,?,?)`,
+		message.ID, message.FolderID, message.Subject, message.FromAddr, string(toJSON), string(ccJSON), message.EMLPath, boolInt(message.Deleted), message.MessageAt, now, now)
 	return err
 }
 
@@ -364,7 +399,7 @@ func scanMessage(row rowScanner) (Message, error) {
 	var message Message
 	var toJSON, ccJSON string
 	var deleted int
-	if err := row.Scan(&message.ID, &message.FolderID, &message.Subject, &message.FromAddr, &toJSON, &ccJSON, &message.EMLPath, &deleted); err != nil {
+	if err := row.Scan(&message.ID, &message.FolderID, &message.Subject, &message.FromAddr, &toJSON, &ccJSON, &message.EMLPath, &deleted, &message.MessageAt); err != nil {
 		return Message{}, err
 	}
 	_ = json.Unmarshal([]byte(toJSON), &message.ToAddrs)
@@ -386,4 +421,21 @@ func newID(prefix string) string {
 		return fmt.Sprintf("%s_%d", prefix, time.Now().UnixNano())
 	}
 	return prefix + "_" + hex.EncodeToString(b[:])
+}
+
+func (s *Store) allocateMessageID(messageAt int64) (string, error) {
+	for suffix := 0; ; suffix++ {
+		id := strconv.FormatInt(messageAt, 10)
+		if suffix > 0 {
+			id = fmt.Sprintf("%d_%d", messageAt, suffix)
+		}
+		var exists int
+		err := s.db.QueryRow(`select 1 from messages where id=?`, id).Scan(&exists)
+		if errors.Is(err, sql.ErrNoRows) {
+			return id, nil
+		}
+		if err != nil {
+			return "", err
+		}
+	}
 }

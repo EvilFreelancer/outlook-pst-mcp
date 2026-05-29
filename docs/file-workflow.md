@@ -22,9 +22,9 @@ The source PST is treated as immutable input. The server must not write, truncat
 
 ## `readpst` Extraction
 
-The `internal/pst` package locates `readpst` on `PATH` and runs it with an output directory under the workspace. Extraction output is raw import material.
+The `internal/pst` package locates `readpst` on `PATH` and runs it with `-e`, `-b`, and `-o` so each message is written as a separate `.eml` file under the workspace extraction directory. The `-b` flag skips RTF body attachments that can crash some `readpst` builds on certain PST items. Extraction output is raw import material.
 
-The importer walks the extraction directory and discovers `.eml` files. Each discovered file is reported with its file path and logical folder path.
+The importer walks the extraction directory and discovers `.eml` files. Each file is renamed to `<unix_timestamp>.eml` using the message `Date` header (or file modification time as a fallback) so folder listings sort chronologically. Indexing reads headers only and stores the renamed path in SQLite without copying message bodies into `workspace/messages/`.
 
 ## Canonical EML Store
 

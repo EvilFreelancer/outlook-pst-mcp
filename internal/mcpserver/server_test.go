@@ -18,7 +18,6 @@ func TestServerListsRequiredToolsAndRejectsUnknownTool(t *testing.T) {
 	tools := server.ToolNames()
 
 	required := []string{
-		"import_mailbox",
 		"list_folders",
 		"list_messages",
 		"get_message",
@@ -97,7 +96,8 @@ func TestServerDispatchesCRUDTools(t *testing.T) {
 
 func TestServeHandlesInitializeAndToolsListFrames(t *testing.T) {
 	server := mcpserver.New(nil)
-	input := frame(`{"jsonrpc":"2.0","id":1,"method":"initialize","params":{}}`) +
+	input := frame(`{"jsonrpc":"2.0","id":1,"method":"initialize","params":{"protocolVersion":"2025-06-18"}}`) +
+		frame(`{"jsonrpc":"2.0","method":"notifications/initialized","params":{}}`) +
 		frame(`{"jsonrpc":"2.0","id":2,"method":"tools/list","params":{}}`)
 	var output bytes.Buffer
 
@@ -106,11 +106,91 @@ func TestServeHandlesInitializeAndToolsListFrames(t *testing.T) {
 	}
 
 	text := output.String()
-	if !strings.Contains(text, `"id":1`) || !strings.Contains(text, `"protocolVersion"`) {
+	if !strings.Contains(text, `"id":1`) || !strings.Contains(text, `"protocolVersion":"2025-06-18"`) {
 		t.Fatalf("initialize response missing: %s", text)
 	}
-	if !strings.Contains(text, `"id":2`) || !strings.Contains(text, `"import_mailbox"`) {
+	if !strings.Contains(text, `"id":2`) || !strings.Contains(text, `"list_folders"`) {
 		t.Fatalf("tools/list response missing: %s", text)
+	}
+	if strings.Contains(text, `"$schema"`) {
+		t.Fatalf("tools/list must not include $schema in inputSchema: %s", text)
+	}
+}
+
+func TestServeHandlesLineDelimitedInitializeAndToolsList(t *testing.T) {
+	server := mcpserver.New(nil)
+	input := `{"jsonrpc":"2.0","id":1,"method":"initialize","params":{"protocolVersion":"2025-11-25"}}` + "\n" +
+		`{"jsonrpc":"2.0","method":"notifications/initialized","params":{}}` + "\n" +
+		`{"jsonrpc":"2.0","id":2,"method":"tools/list","params":{}}` + "\n"
+	var output bytes.Buffer
+
+	if err := server.Serve(context.Background(), strings.NewReader(input), &output); err != nil {
+		t.Fatalf("Serve returned error: %v", err)
+	}
+
+	lines := strings.Split(strings.TrimSpace(output.String()), "\n")
+	if len(lines) != 2 {
+		t.Fatalf("line-delimited output line count = %d, output: %q", len(lines), output.String())
+	}
+	if strings.Contains(output.String(), "Content-Length:") {
+		t.Fatalf("line-delimited response must not include Content-Length headers: %q", output.String())
+	}
+	if !strings.Contains(lines[0], `"id":1`) || !strings.Contains(lines[0], `"protocolVersion":"2025-11-25"`) {
+		t.Fatalf("initialize line missing: %s", lines[0])
+	}
+	if !strings.Contains(lines[1], `"id":2`) || !strings.Contains(lines[1], `"list_folders"`) {
+		t.Fatalf("tools/list line missing: %s", lines[1])
+	}
+}
+
+func TestServeRespondsToInitializeBeforeWorkspaceOpen(t *testing.T) {
+	server := mcpserver.NewLazy(t.TempDir())
+	input := frame(`{"jsonrpc":"2.0","id":1,"method":"initialize","params":{"protocolVersion":"2025-06-18"}}`)
+	var output bytes.Buffer
+	if err := server.Serve(context.Background(), strings.NewReader(input), &output); err != nil {
+		t.Fatalf("Serve returned error: %v", err)
+	}
+	if !strings.Contains(output.String(), `"protocolVersion":"2025-06-18"`) {
+		t.Fatalf("initialize response missing: %s", output.String())
+	}
+}
+
+func TestToolInputSchemasAreCursorCompatible(t *testing.T) {
+	server := mcpserver.New(nil)
+	input := frame(`{"jsonrpc":"2.0","id":1,"method":"tools/list","params":{}}`)
+	var output bytes.Buffer
+	if err := server.Serve(context.Background(), strings.NewReader(input), &output); err != nil {
+		t.Fatalf("Serve returned error: %v", err)
+	}
+
+	var resp struct {
+		Result struct {
+			Tools []struct {
+				Name        string         `json:"name"`
+				InputSchema map[string]any `json:"inputSchema"`
+			} `json:"tools"`
+		} `json:"result"`
+	}
+	payload := strings.SplitN(output.String(), "\r\n\r\n", 2)
+	if len(payload) != 2 {
+		t.Fatalf("unexpected frame output: %s", output.String())
+	}
+	if err := json.Unmarshal([]byte(payload[1]), &resp); err != nil {
+		t.Fatalf("decode tools/list response: %v", err)
+	}
+	if len(resp.Result.Tools) != len(server.ToolNames()) {
+		t.Fatalf("tool count = %d, want %d", len(resp.Result.Tools), len(server.ToolNames()))
+	}
+	for _, tool := range resp.Result.Tools {
+		if tool.InputSchema["type"] != "object" {
+			t.Fatalf("tool %q schema type = %#v", tool.Name, tool.InputSchema["type"])
+		}
+		if _, ok := tool.InputSchema["$schema"]; ok {
+			t.Fatalf("tool %q schema must not include $schema", tool.Name)
+		}
+		if tool.InputSchema["additionalProperties"] == true {
+			t.Fatalf("tool %q schema must not allow additionalProperties", tool.Name)
+		}
 	}
 }
 

@@ -2,7 +2,14 @@
 
 ## Transport
 
-The server uses MCP over stdio. Messages are JSON-RPC payloads framed with `Content-Length` headers.
+The server uses MCP over stdio. It accepts both newline-delimited JSON-RPC
+messages and JSON-RPC payloads framed with `Content-Length` headers. The
+response framing matches the framing used by the first request on the
+connection.
+
+Cursor's bundled MCP stdio transport sends newline-delimited JSON. The
+`Content-Length` mode is kept for compatibility with MCP clients and local
+diagnostic scripts that use header-framed stdio messages.
 
 The server supports:
 
@@ -13,20 +20,13 @@ The server supports:
 
 Unknown JSON-RPC methods return a method-not-found error. Tool failures are returned as JSON-RPC errors with actionable messages.
 
+Tool `inputSchema` values follow MCP 2025-06-18 conventions: plain JSON Schema objects with `type: "object"`, property descriptions, and no `$schema` meta field. Stdout responses are flushed after each framed message so Cursor can complete the initialize handshake promptly.
+
+The MCP serve command opens `mailbox.db` lazily on the first `tools/call`, not before `initialize`, so the stdio handshake is not blocked by SQLite startup or locks from other processes.
+
 ## Tools
 
-### `import_mailbox`
-
-Imports a PST file into the workspace.
-
-Arguments:
-
-- `pst_path`: path to the PST file.
-
-Response:
-
-- `folder_count`
-- `message_count`
+Mailbox import is performed by the CLI subcommand `outlook-pst-mcp import` and is not exposed as an MCP tool. The MCP server operates on an existing workspace database.
 
 ### `list_folders`
 
@@ -153,4 +153,3 @@ Response:
 - `readpst` failures include the command failure and stderr/stdout tail.
 - Unknown tools return a clear unknown-tool error.
 - Invalid JSON arguments return JSON-RPC argument errors.
-

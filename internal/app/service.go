@@ -3,10 +3,10 @@ package app
 import (
 	"os"
 	"path/filepath"
+	"time"
 
 	"outlook-pst-mcp/internal/exporter"
 	"outlook-pst-mcp/internal/mail"
-	"outlook-pst-mcp/internal/pst"
 	"outlook-pst-mcp/internal/store"
 )
 
@@ -40,36 +40,6 @@ func (s *Service) EnsureFolder(path string) (store.Folder, error) {
 		return folder, err
 	}
 	return s.store.CreateFolder(filepath.Base(path), path, nil)
-}
-
-func (s *Service) ImportMailbox(pstPath string) (int, int, error) {
-	result, err := pst.Import(pst.Options{PSTPath: pstPath, OutputDir: filepath.Join(s.workspace, "extracted")})
-	if err != nil {
-		return 0, 0, err
-	}
-	folders := map[string]store.Folder{}
-	for _, extracted := range result.Messages {
-		folder, ok := folders[extracted.FolderPath]
-		if !ok {
-			folder, err = s.EnsureFolder(extracted.FolderPath)
-			if err != nil {
-				return 0, 0, err
-			}
-			folders[extracted.FolderPath] = folder
-		}
-		data, err := os.ReadFile(extracted.Path)
-		if err != nil {
-			return 0, 0, err
-		}
-		parsed, err := mail.ParseEML(data)
-		if err != nil {
-			return 0, 0, err
-		}
-		if _, err := s.CreateMessage(CreateMessageRequest{FolderID: folder.ID, Message: parsed}); err != nil {
-			return 0, 0, err
-		}
-	}
-	return len(folders), len(result.Messages), nil
 }
 
 func (s *Service) ListFolders() ([]store.Folder, error) {
@@ -106,13 +76,18 @@ func (s *Service) CreateMessage(request CreateMessageRequest) (store.Message, er
 	if err != nil {
 		return store.Message{}, err
 	}
+	messageAt := time.Now().Unix()
+	if request.Message.Date != nil {
+		messageAt = request.Message.Date.Unix()
+	}
 	created, err := s.store.CreateMessage(store.Message{
-		FolderID: request.FolderID,
-		Subject:  request.Message.Subject,
-		FromAddr: request.Message.From,
-		ToAddrs:  request.Message.To,
-		CcAddrs:  request.Message.Cc,
-		EMLPath:  "pending",
+		FolderID:  request.FolderID,
+		Subject:   request.Message.Subject,
+		FromAddr:  request.Message.From,
+		ToAddrs:   request.Message.To,
+		CcAddrs:   request.Message.Cc,
+		EMLPath:   "pending",
+		MessageAt: messageAt,
 	})
 	if err != nil {
 		return store.Message{}, err

@@ -83,6 +83,14 @@ workspace/
   export/
 ```
 
+## Import a PST
+
+Import is a CLI subcommand and writes into the workspace database:
+
+```bash
+./bin/outlook-pst-mcp import -workspace ./workspace -pst /absolute/path/to/backup.pst
+```
+
 ## MCP Client Configuration
 
 Example client configuration:
@@ -98,17 +106,12 @@ Example client configuration:
 }
 ```
 
+Cursor uses newline-delimited JSON for stdio MCP servers. The server also
+accepts `Content-Length` framed messages for compatibility with other clients
+and diagnostic scripts. After changing server code, run `make build` before
+reloading the MCP server in Cursor so the configured binary is up to date.
+
 ## Tools
-
-### `import_mailbox`
-
-Imports a PST file into the workspace.
-
-```json
-{
-  "pst_path": "/absolute/path/to/backup.pst"
-}
-```
 
 ### `list_folders`
 

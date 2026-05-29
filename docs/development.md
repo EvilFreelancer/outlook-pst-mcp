@@ -38,6 +38,14 @@ Tests cover:
 - Application CRUD and export workflows.
 - MCP tool listing, tool dispatch, and stdio JSON-RPC framing.
 
+## Import
+
+Mailbox import is a CLI subcommand:
+
+```bash
+./bin/outlook-pst-mcp import -workspace ./workspace -pst /absolute/path/to/backup.pst
+```
+
 ## Build
 
 Builds use `-buildvcs=false` because some local workspaces may contain a read-only or synthetic `.git` directory that prevents Go VCS stamping.
