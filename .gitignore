@@ -1,0 +1,9 @@
+outlook-pst-mcp
+bin/
+workspace/
+*.db
+*.db-*
+*.pst
+export/
+extracted/
+messages/
