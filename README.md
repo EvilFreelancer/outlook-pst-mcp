@@ -4,6 +4,8 @@ This project is a local MCP server for working with messages from an Outlook PST
 
 The server treats the source PST file as read-only input. It imports messages through `readpst`, stores editable mailbox state in a workspace, exposes CRUD tools over MCP, and exports the final mailbox state as an EML folder tree with a `manifest.json` file.
 
+Repository: `https://github.com/EvilFreelancer/outlook-pst-mcp`
+
 ## What It Does
 
 - Imports Outlook PST content through `readpst` from `libpst`.
@@ -32,6 +34,13 @@ sudo apt install pst-utils
 ```
 
 ## Build
+
+Clone the repository and enter the project directory:
+
+```bash
+git clone https://github.com/EvilFreelancer/outlook-pst-mcp.git
+cd outlook-pst-mcp
+```
 
 ```bash
 make build
@@ -232,7 +241,7 @@ Exports the current workspace state as an EML folder tree.
 make test
 ```
 
-`make test` uses `GOCACHE=/tmp/email-parsing-go-build` by default so tests work in restricted environments.
+`make test` uses `GOCACHE=/tmp/outlook-pst-mcp-go-build` by default so tests work in restricted environments.
 
 ## Make Targets
 

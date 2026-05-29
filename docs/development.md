@@ -25,7 +25,7 @@ The `Makefile` is the primary local interface.
 - `make run`: run the server over stdio; optional `WORKSPACE=dir` overrides the default `<cwd>/.outlook-pst-mcp_data`.
 - `make clean`: remove build output.
 
-`GOCACHE` defaults to `/tmp/email-parsing-go-build` so tests and builds work in restricted environments where the default Go cache may not be writable.
+`GOCACHE` defaults to `/tmp/outlook-pst-mcp-go-build` so tests and builds work in restricted environments where the default Go cache may not be writable.
 
 ## Testing
 

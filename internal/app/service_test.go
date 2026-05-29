@@ -6,9 +6,9 @@ import (
 	"runtime"
 	"testing"
 
-	"outlook-pst-mcp/internal/app"
-	"outlook-pst-mcp/internal/mail"
-	"outlook-pst-mcp/internal/store"
+	"github.com/EvilFreelancer/outlook-pst-mcp/internal/app"
+	"github.com/EvilFreelancer/outlook-pst-mcp/internal/mail"
+	"github.com/EvilFreelancer/outlook-pst-mcp/internal/store"
 )
 
 func TestServiceCRUDAndExportWorkflow(t *testing.T) {

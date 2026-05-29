@@ -4,7 +4,7 @@ import (
 	"path/filepath"
 	"testing"
 
-	"outlook-pst-mcp/internal/store"
+	"github.com/EvilFreelancer/outlook-pst-mcp/internal/store"
 )
 
 func TestStoreFolderMessageCRUDAndChanges(t *testing.T) {

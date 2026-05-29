@@ -8,9 +8,9 @@ import (
 	"strconv"
 	"time"
 
-	"outlook-pst-mcp/internal/mail"
-	"outlook-pst-mcp/internal/pst"
-	"outlook-pst-mcp/internal/store"
+	"github.com/EvilFreelancer/outlook-pst-mcp/internal/mail"
+	"github.com/EvilFreelancer/outlook-pst-mcp/internal/pst"
+	"github.com/EvilFreelancer/outlook-pst-mcp/internal/store"
 )
 
 func (s *Service) ImportMailbox(pstPath string) (int, int, int, error) {

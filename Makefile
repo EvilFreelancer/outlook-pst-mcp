@@ -1,5 +1,5 @@
 GO ?= go
-GOCACHE ?= /tmp/email-parsing-go-build
+GOCACHE ?= /tmp/outlook-pst-mcp-go-build
 PREFIX ?= $(HOME)/.local
 BINDIR ?= $(PREFIX)/bin
 WORKSPACE ?=

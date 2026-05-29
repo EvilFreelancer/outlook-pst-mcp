@@ -6,7 +6,7 @@ import (
 	"testing"
 	"time"
 
-	"outlook-pst-mcp/internal/mail"
+	"github.com/EvilFreelancer/outlook-pst-mcp/internal/mail"
 )
 
 func TestParseEMLMetadataFileReadsHeadersOnly(t *testing.T) {

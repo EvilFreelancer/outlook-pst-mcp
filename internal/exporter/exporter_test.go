@@ -6,8 +6,8 @@ import (
 	"path/filepath"
 	"testing"
 
-	"outlook-pst-mcp/internal/exporter"
-	"outlook-pst-mcp/internal/store"
+	"github.com/EvilFreelancer/outlook-pst-mcp/internal/exporter"
+	"github.com/EvilFreelancer/outlook-pst-mcp/internal/store"
 )
 
 func TestExportCopiesNonDeletedMessagesAndWritesManifest(t *testing.T) {

@@ -5,9 +5,9 @@ import (
 	"path/filepath"
 	"time"
 
-	"outlook-pst-mcp/internal/exporter"
-	"outlook-pst-mcp/internal/mail"
-	"outlook-pst-mcp/internal/store"
+	"github.com/EvilFreelancer/outlook-pst-mcp/internal/exporter"
+	"github.com/EvilFreelancer/outlook-pst-mcp/internal/mail"
+	"github.com/EvilFreelancer/outlook-pst-mcp/internal/store"
 )
 
 type Service struct {

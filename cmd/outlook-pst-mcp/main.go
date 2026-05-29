@@ -7,9 +7,9 @@ import (
 	"fmt"
 	"os"
 
-	"outlook-pst-mcp/internal/app"
-	"outlook-pst-mcp/internal/mcpserver"
-	"outlook-pst-mcp/internal/workspace"
+	"github.com/EvilFreelancer/outlook-pst-mcp/internal/app"
+	"github.com/EvilFreelancer/outlook-pst-mcp/internal/mcpserver"
+	"github.com/EvilFreelancer/outlook-pst-mcp/internal/workspace"
 )
 
 func main() {

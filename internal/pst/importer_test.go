@@ -6,7 +6,7 @@ import (
 	"runtime"
 	"testing"
 
-	"outlook-pst-mcp/internal/pst"
+	"github.com/EvilFreelancer/outlook-pst-mcp/internal/pst"
 )
 
 func TestImporterUsesReadpstAndDiscoversExtractedEML(t *testing.T) {

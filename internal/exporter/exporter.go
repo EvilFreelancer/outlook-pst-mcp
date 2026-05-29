@@ -9,7 +9,7 @@ import (
 	"strings"
 	"time"
 
-	"outlook-pst-mcp/internal/store"
+	"github.com/EvilFreelancer/outlook-pst-mcp/internal/store"
 )
 
 type Request struct {

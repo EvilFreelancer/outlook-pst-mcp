@@ -1,4 +1,4 @@
-module outlook-pst-mcp
+module github.com/EvilFreelancer/outlook-pst-mcp
 
 go 1.24
 

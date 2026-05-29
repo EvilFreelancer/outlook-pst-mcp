@@ -2,7 +2,7 @@
 
 ## Overview
 
-The project is a single Go module with a CLI entrypoint under `cmd/outlook-pst-mcp`. The binary runs an MCP server over stdio. The application service layer coordinates PST import, EML parsing, SQLite metadata, CRUD operations, and final EML export.
+The project is a single Go module published as `github.com/EvilFreelancer/outlook-pst-mcp`, with a CLI entrypoint under `cmd/outlook-pst-mcp`. The binary runs an MCP server over stdio. The application service layer coordinates PST import, EML parsing, SQLite metadata, CRUD operations, and final EML export.
 
 ## Packages
 
@@ -41,4 +41,3 @@ Each create, update, move, and delete operation writes a change row with the aff
 ## Dependency Boundaries
 
 The MCP package depends on the application service, not on SQLite or file import internals. The application service composes the lower-level packages. The lower-level packages do not import MCP code.
-

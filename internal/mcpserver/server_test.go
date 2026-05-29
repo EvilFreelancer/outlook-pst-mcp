@@ -11,9 +11,9 @@ import (
 	"strings"
 	"testing"
 
-	"outlook-pst-mcp/internal/app"
-	"outlook-pst-mcp/internal/mcpserver"
-	"outlook-pst-mcp/internal/store"
+	"github.com/EvilFreelancer/outlook-pst-mcp/internal/app"
+	"github.com/EvilFreelancer/outlook-pst-mcp/internal/mcpserver"
+	"github.com/EvilFreelancer/outlook-pst-mcp/internal/store"
 )
 
 func TestServerListsRequiredToolsAndRejectsUnknownTool(t *testing.T) {

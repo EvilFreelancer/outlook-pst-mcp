@@ -6,6 +6,8 @@ Build a local Go MCP server that lets an MCP client inspect and edit messages fr
 
 The server reads the PST through `readpst`, indexes extracted mail, applies CRUD operations to a local workspace, and exports the final state as an EML folder tree that can be imported into mail software.
 
+The project is distributed as the `outlook-pst-mcp` binary from `github.com/EvilFreelancer/outlook-pst-mcp`.
+
 ## Constraints
 
 - The implementation language is Go.
