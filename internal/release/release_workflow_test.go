@@ -13,6 +13,7 @@ func TestReleaseWorkflowPublishesBinaries(t *testing.T) {
 
 	requiredSnippets := []string{
 		"name: Release binaries",
+		"workflow_call:",
 		"workflow_dispatch:",
 		"push:",
 		"tags:",
@@ -29,6 +30,51 @@ func TestReleaseWorkflowPublishesBinaries(t *testing.T) {
 	for _, snippet := range requiredSnippets {
 		if !strings.Contains(workflow, snippet) {
 			t.Fatalf("release workflow is missing %q", snippet)
+		}
+	}
+}
+
+func TestPullRequestWorkflowRunsProjectVerification(t *testing.T) {
+	root := filepath.Join("..", "..")
+	workflow := readFile(t, filepath.Join(root, ".github", "workflows", "tests-on-pr.yaml"))
+
+	requiredSnippets := []string{
+		"name: Tests on PR",
+		"pull_request:",
+		"actions/setup-go@v5",
+		"go-version-file: go.mod",
+		"make check",
+		"make test",
+		"make build",
+	}
+
+	for _, snippet := range requiredSnippets {
+		if !strings.Contains(workflow, snippet) {
+			t.Fatalf("pull request workflow is missing %q", snippet)
+		}
+	}
+}
+
+func TestTagOnMergeWorkflowBumpsPatchAndCallsReleaseBinaries(t *testing.T) {
+	root := filepath.Join("..", "..")
+	workflow := readFile(t, filepath.Join(root, ".github", "workflows", "tag-on-merge.yaml"))
+
+	requiredSnippets := []string{
+		"name: Tag release on merge",
+		"branches:",
+		"main",
+		"workflow_dispatch:",
+		"release_tag",
+		"git tag -a",
+		"git push origin",
+		"awk -F.",
+		"uses: ./.github/workflows/release-binaries.yaml",
+		"tag: ${{ needs.release.outputs.tag }}",
+	}
+
+	for _, snippet := range requiredSnippets {
+		if !strings.Contains(workflow, snippet) {
+			t.Fatalf("tag on merge workflow is missing %q", snippet)
 		}
 	}
 }

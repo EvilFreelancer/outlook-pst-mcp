@@ -281,6 +281,21 @@ make clean
 
 `make check` runs `go vet ./...`.
 
+## Release Flow
+
+Pull requests run GitHub Actions verification with:
+
+```bash
+make check
+make test
+make build
+```
+
+After changes are merged to `main`, GitHub Actions bumps the latest patch SemVer
+tag, pushes the new tag, and calls the release binary workflow. The release
+workflow builds the archives, writes `SHA256SUMS`, and uploads everything to the
+matching GitHub Release.
+
 ## Documentation
 
 Project documentation lives in `docs/`:

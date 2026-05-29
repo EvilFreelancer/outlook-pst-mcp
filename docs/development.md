@@ -54,9 +54,16 @@ Builds use `-buildvcs=false` because some local workspaces may contain a read-on
 
 ## Release Binaries
 
-GitHub Actions publishes prebuilt release binaries to GitHub Releases when a
-SemVer tag in `X.Y.Z` format is pushed, or when the release workflow is started
-manually with a SemVer tag.
+GitHub Actions uses three workflows for CI and releases:
+
+- `Tests on PR`: runs project verification for pull requests.
+- `Tag release on merge`: bumps the latest patch SemVer tag after a merge to
+  `main`, unless the commit is already tagged.
+- `Release binaries`: builds and publishes release assets for the tag.
+
+The release binary workflow is callable from the tag workflow because tags
+pushed with `GITHUB_TOKEN` do not trigger a separate `push: tags` workflow run.
+It also supports direct SemVer tag pushes and manual dispatch.
 
 Release assets are named:
 
