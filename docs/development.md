@@ -116,3 +116,8 @@ Example:
 ```bash
 curl -fsSL https://raw.githubusercontent.com/EvilFreelancer/outlook-pst-mcp/main/install.sh | bash
 ```
+
+The installer only installs the MCP server binary. PST import still requires
+`readpst` on `PATH`. On Debian or Ubuntu, install `pst-utils`. On Windows,
+install a Windows build of `readpst.exe` and add it to `PATH`, or run the Linux
+binary and `pst-utils` under WSL.

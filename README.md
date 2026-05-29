@@ -98,8 +98,7 @@ Install a specific release:
 ```
 
 The scripts download the latest release from GitHub Releases, install the binary
-to `~/.local/bin/outlook-pst-mcp` on Linux or `%LOCALAPPDATA%\Programs\outlook-pst-mcp\outlook-pst-mcp.exe`
-on Windows, and print an MCP client configuration with a stable workspace path.
+to `~/.local/bin/outlook-pst-mcp` on Linux or `%LOCALAPPDATA%\Programs\outlook-pst-mcp\outlook-pst-mcp.exe` on Windows, and print an MCP client configuration with a stable workspace path.
 
 Release assets use these names:
 
@@ -108,11 +107,18 @@ outlook-pst-mcp_<version>_<os>_<arch>.tar.gz
 outlook-pst-mcp_<version>_<os>_<arch>.zip
 ```
 
-Install `readpst` before importing real PST files. On Debian or Ubuntu:
+Install `readpst` before importing real PST files. The install scripts install
+only the MCP server binary.
+
+On Debian or Ubuntu, `readpst` is provided by `pst-utils`:
 
 ```bash
 sudo apt install pst-utils
 ```
+
+On Windows, `pst-utils` is not an apt package. Put a Windows build of
+`readpst.exe` on `PATH`, or run the Linux binary in WSL and install `pst-utils`
+there.
 
 ## Run
 
